@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
+import RentMap from "@/components/RentMap";
 type RentalType =
   | "flat_room"
   | "one_bedroom"
@@ -176,16 +176,94 @@ export default function Home() {
 
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-end justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold">Recommended suburbs</h2>
-                <p className="mt-2 text-sm text-slate-500">
-                  Sorted by rent-to-income ratio, from lowest to highest.
-                </p>
-              </div>
-              {results.length > 0 && (
-                <p className="text-sm text-slate-500">{results.length} suburbs</p>
-              )}
-            </div>
+  <div>
+    <h2 className="text-xl font-semibold">Recommended suburbs</h2>
+    <p className="mt-2 text-sm text-slate-500">
+      Sorted by rent-to-income ratio, from lowest to highest.
+    </p>
+  </div>
+  {results.length > 0 && (
+    <p className="text-sm text-slate-500">{results.length} suburbs</p>
+  )}
+</div>
+
+<div className="mb-6">
+  {results.length === 0 ? (
+    <div className="flex h-[420px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
+      <div>
+        <p className="font-medium text-slate-700">Map preview</p>
+        <p className="mt-2 text-sm text-slate-500">
+          Search first to show suburb markers.
+        </p>
+      </div>
+    </div>
+  ) : (
+    <RentMap results={results} />
+  )}
+</div>
+
+{results.length === 0 ? (
+  <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
+    <div>
+      <p className="font-medium text-slate-700">No results yet.</p>
+      <p className="mt-2 text-sm text-slate-500">
+        Enter your income and click Find suburbs.
+      </p>
+    </div>
+  </div>
+) : (
+  <div className="grid gap-4 md:grid-cols-2">
+    {results.map((item) => (
+      <article
+        key={`${item.suburbSlug}-${item.rentalType}`}
+        className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold">{item.suburbName}</h3>
+            <p className="mt-1 text-sm text-slate-500">{item.area}</p>
+          </div>
+
+          <span
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
+              item.status
+            )}`}
+          >
+            {getStatusLabel(item.status)}
+          </span>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-xs text-slate-500">Weekly rent</p>
+            <p className="mt-1 text-lg font-bold">${item.weeklyRent}</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-xs text-slate-500">Monthly rent</p>
+            <p className="mt-1 text-lg font-bold">${item.monthlyRent}</p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-xs text-slate-500">Income ratio</p>
+            <p className="mt-1 text-lg font-bold">
+              {item.rentToIncomePercentage}%
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white p-4">
+            <p className="text-xs text-slate-500">Listings</p>
+            <p className="mt-1 text-lg font-bold">{item.listingCount}</p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs text-slate-400">
+          Source: {item.source} · Collected: {item.collectedAt}
+        </p>
+      </article>
+    ))}
+  </div>
+)}
 
             {results.length === 0 ? (
               <div className="flex min-h-[320px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
