@@ -2,7 +2,7 @@
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
-import Map, { Marker, Popup } from "react-map-gl";
+import Map, { Marker, Popup } from "react-map-gl/mapbox";
 import { useState } from "react";
 
 type AffordabilityStatus = "affordable" | "moderate" | "expensive";

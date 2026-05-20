@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import RentMap from "@/components/RentMap";
 type RentalType =
