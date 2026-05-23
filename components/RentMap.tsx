@@ -19,9 +19,11 @@ type MapResult = {
   status: AffordabilityStatus;
 };
 
-type RentMapProps = {
+type RentMapProps = { 
   results: MapResult[];
-  hoveredsuburbSlug: string | null;
+  hoveredSuburbSlug?: string | null;
+  selectedSuburbSlug?: string | null;
+  onSelectSuburb?: (suburbSlug: string) => void;
 };
 
 function getMarkerClass(status: AffordabilityStatus) {
@@ -38,7 +40,9 @@ function getMarkerClass(status: AffordabilityStatus) {
 
 export default function RentMap({ 
   results,
-  hoveredSuburbSlug
+  hoveredSuburbSlug,
+  selectedSuburbSlug,
+  onSelectSuburb,
 }: RentMapProps) {
   const [selectedSuburb, setSelectedSuburb] = useState<MapResult | null>(null);
 
@@ -65,17 +69,20 @@ export default function RentMap({
             latitude={item.latitude as number}
             anchor="center"
           >
-            <button
-  type="button"
-  onClick={() => setSelectedSuburb(item)}
-  className={`rounded-full border-2 shadow-md transition-all duration-200 hover:scale-125 
-    ${
-    hoveredSuburbSlug === item.suburbSlug
-      ? "h-7 w-7 scale-125 ring-4 ring-slate-900/20"
-      : "h-4 w-4"
-  } ${getMarkerClass(item.status)}`}
-  aria-label={item.suburbName}
-/>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedSuburb(item);
+              onSelectSuburb?.(item.suburbSlug);
+            }}
+            className={`rounded-full border-2 shadow-md transition-all duration-200 hover:scale-125 ${
+              hoveredSuburbSlug === item.suburbSlug ||
+              selectedSuburbSlug === item.suburbSlug
+                ? "h-7 w-7 scale-125 ring-4 ring-slate-900/20"
+                : "h-4 w-4"
+            } ${getMarkerClass(item.status)}`}
+            aria-label={item.suburbName}
+          />
           </Marker>
         ))}
 

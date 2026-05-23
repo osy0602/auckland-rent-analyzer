@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import RentMap from "@/components/RentMap";
 type RentalType =
   | "flat_room"
@@ -62,9 +62,26 @@ export default function Home() {
   const [monthlyIncome, setMonthlyIncome] = useState("4500");
   const [rentalType, setRentalType] = useState<RentalType>("flat_room");
   const [results, setResults] = useState<AffordabilityResult[]>([]);
+  const [hoveredSuburbSlug, setHoveredSuburbSlug] = useState<string | null>(null);
+  const [selectedSuburbSlug, setSelectedSuburbSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
+  function handleSelectSuburb(suburbSlug: string) {
+    setSelectedSuburbSlug(suburbSlug);
 
+    const targetCard = cardRefs.current[suburbSlug];
+
+    if (targetCard) {
+      targetCard.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }
+  
   async function handleSearch() {
     const income = Number(monthlyIncome);
 
@@ -88,6 +105,8 @@ export default function Home() {
       }
 
       setResults(data.results);
+      setSelectedSuburbSlug(null);
+      setHoveredSuburbSlug(null);
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong. Please try again.");
@@ -197,7 +216,12 @@ export default function Home() {
       </div>
     </div>
   ) : (
-    <RentMap results={results} />
+    <RentMap
+        results={results}
+        hoveredSuburbSlug={hoveredSuburbSlug}
+        selectedSuburbSlug={selectedSuburbSlug}
+        onSelectSuburb={handleSelectSuburb}
+    />
   )}
 </div>
 
@@ -215,7 +239,16 @@ export default function Home() {
     {results.map((item) => (
       <article
         key={`${item.suburbSlug}-${item.rentalType}`}
-        className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+        ref={(element) => {
+          cardRefs.current[item.suburbSlug] = element;
+        }}
+        onMouseEnter={() => setHoveredSuburbSlug(item.suburbSlug)}
+        onMouseLeave={() => setHoveredSuburbSlug(null)}
+        className={`rounded-3xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md ${
+          selectedSuburbSlug === item.suburbSlug
+            ? "border-slate-900 ring-4 ring-slate-900/10"
+            : "border-slate-200"
+        }`}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
