@@ -81,7 +81,25 @@ export default function Home() {
       });
     }
   }
-  
+  const affordableCount = results.filter(
+    (item) => item.status === "affordable"
+  ).length;
+
+  const moderateCount = results.filter(
+    (item) => item.status === "moderate"
+  ).length;
+
+  const expensiveCount = results.filter(
+    (item) => item.status === "expensive"
+  ).length;
+
+  const cheapestSuburb = results[0];
+
+  const averageRentRatio =
+    results.length > 0
+      ? results.reduce((sum, item) => sum + item.rentToIncomePercentage, 0) /
+        results.length
+      : 0;
   async function handleSearch() {
     const income = Number(monthlyIncome);
 
@@ -205,6 +223,45 @@ export default function Home() {
   )}
 </div>
 
+{results.length > 0 && (
+  <div className="mb-6 grid gap-3 md:grid-cols-5">
+    <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+      <p className="text-xs font-medium text-green-700">Affordable</p>
+      <p className="mt-1 text-2xl font-bold text-green-800">
+        {affordableCount}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+      <p className="text-xs font-medium text-yellow-700">Tight</p>
+      <p className="mt-1 text-2xl font-bold text-yellow-800">
+        {moderateCount}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+      <p className="text-xs font-medium text-red-700">Expensive</p>
+      <p className="mt-1 text-2xl font-bold text-red-800">
+        {expensiveCount}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-medium text-slate-500">Cheapest</p>
+      <p className="mt-1 truncate text-lg font-bold text-slate-900">
+        {cheapestSuburb?.suburbName}
+      </p>
+    </div>
+
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-medium text-slate-500">Avg. ratio</p>
+      <p className="mt-1 text-2xl font-bold text-slate-900">
+        {averageRentRatio.toFixed(1)}%
+      </p>
+    </div>
+  </div>
+)}
+
 <div className="mb-6">
   {results.length === 0 ? (
     <div className="flex h-[420px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
@@ -236,7 +293,8 @@ export default function Home() {
   </div>
 ) : (
   <div className="grid gap-4 md:grid-cols-2">
-    {results.map((item) => (
+    {
+      results.map((item) => (
       <article
         key={`${item.suburbSlug}-${item.rentalType}`}
         ref={(element) => {
