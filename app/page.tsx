@@ -21,6 +21,10 @@ type AffordabilityResult = {
   rentToIncomeRatio: number;
   rentToIncomePercentage: number;
   status: "affordable" | "moderate" | "expensive";
+  workplaceSlug: string;
+  workplaceName: string;
+  distanceToWorkKm: number | null;
+  recommendationScore: number;
   listingCount: number;
   source: string;
   collectedAt: string;
@@ -38,6 +42,18 @@ const rentalTypeOptions = [
   { label: "1 Bedroom", value: "one_bedroom" },
   { label: "2 Bedrooms", value: "two_bedroom" },
   { label: "3 Bedrooms", value: "three_bedroom" },
+] as const;
+
+const workplaceOptions = [
+  { label: "Auckland CBD", value: "auckland-cbd" },
+  { label: "Newmarket", value: "newmarket" },
+  { label: "Ponsonby", value: "ponsonby" },
+  { label: "Parnell", value: "parnell" },
+  { label: "Takapuna", value: "takapuna" },
+  { label: "Albany", value: "albany" },
+  { label: "Henderson", value: "henderson" },
+  { label: "Manukau", value: "manukau" },
+  { label: "Botany Downs", value: "botany-downs" },
 ] as const;
 
 function getStatusLabel(status: AffordabilityResult["status"]) {
@@ -66,6 +82,7 @@ export default function Home() {
   const [selectedSuburbSlug, setSelectedSuburbSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [workplaceSlug, setWorkplaceSlug] = useState("auckland-cbd");
   
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
@@ -113,7 +130,7 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        `/api/affordability?monthlyIncome=${income}&rentalType=${rentalType}`
+        `/api/affordability?monthlyIncome=${income}&rentalType=${rentalType}&workplaceSlug=${workplaceSlug}`
       );
 
       const data: ApiResponse = await response.json();
@@ -193,7 +210,22 @@ export default function Home() {
                   ))}
                 </select>
               </div>
-
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Workplace
+                </label>
+                <select
+                  value={workplaceSlug}
+                  onChange={(event) => setWorkplaceSlug(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none"
+                >
+                  {workplaceOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={handleSearch}
                 disabled={loading}
@@ -215,7 +247,7 @@ export default function Home() {
   <div>
     <h2 className="text-xl font-semibold">Recommended suburbs</h2>
     <p className="mt-2 text-sm text-slate-500">
-      Sorted by rent-to-income ratio, from lowest to highest.
+      Sorted by rent burden and distance to your selected workplace.
     </p>
   </div>
   {results.length > 0 && (
@@ -417,15 +449,16 @@ export default function Home() {
                       </div>
 
                       <div className="rounded-2xl bg-white p-4">
-                        <p className="text-xs text-slate-500">Listings</p>
+                        <p className="text-xs text-slate-500">Distance</p>
                         <p className="mt-1 text-lg font-bold">
-                          {item.listingCount}
+                          {item.distanceToWorkKm} km
                         </p>
                       </div>
                     </div>
 
                     <p className="mt-4 text-xs text-slate-400">
-                      Source: {item.source} · Collected: {item.collectedAt}
+                      Source: {item.source} · {item.listingCount} listings · Collected:{" "}
+{item.collectedAt}
                     </p>
                   </article>
                 ))}
