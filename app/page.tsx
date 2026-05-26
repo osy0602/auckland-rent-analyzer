@@ -1,11 +1,15 @@
 "use client";
-import { useState, useRef } from "react";
+
+import { useRef, useState } from "react";
 import RentMap from "@/components/RentMap";
+
 type RentalType =
   | "flat_room"
   | "one_bedroom"
   | "two_bedroom"
   | "three_bedroom";
+
+type StatusFilter = "all" | "affordable" | "moderate" | "expensive";
 
 type AffordabilityResult = {
   suburbName: string;
@@ -56,6 +60,13 @@ const workplaceOptions = [
   { label: "Botany Downs", value: "botany-downs" },
 ] as const;
 
+const statusFilterOptions = [
+  { label: "All", value: "all" },
+  { label: "Affordable", value: "affordable" },
+  { label: "Tight", value: "moderate" },
+  { label: "Expensive", value: "expensive" },
+] as const;
+
 function getStatusLabel(status: AffordabilityResult["status"]) {
   if (status === "affordable") return "Affordable";
   if (status === "moderate") return "Tight";
@@ -77,27 +88,21 @@ function getStatusClass(status: AffordabilityResult["status"]) {
 export default function Home() {
   const [monthlyIncome, setMonthlyIncome] = useState("4500");
   const [rentalType, setRentalType] = useState<RentalType>("flat_room");
+  const [workplaceSlug, setWorkplaceSlug] = useState("auckland-cbd");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
   const [results, setResults] = useState<AffordabilityResult[]>([]);
-  const [hoveredSuburbSlug, setHoveredSuburbSlug] = useState<string | null>(null);
-  const [selectedSuburbSlug, setSelectedSuburbSlug] = useState<string | null>(null);
+  const [hoveredSuburbSlug, setHoveredSuburbSlug] = useState<string | null>(
+    null
+  );
+  const [selectedSuburbSlug, setSelectedSuburbSlug] = useState<string | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [workplaceSlug, setWorkplaceSlug] = useState("auckland-cbd");
-  
+
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  
-  function handleSelectSuburb(suburbSlug: string) {
-    setSelectedSuburbSlug(suburbSlug);
 
-    const targetCard = cardRefs.current[suburbSlug];
-
-    if (targetCard) {
-      targetCard.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
-  }
   const affordableCount = results.filter(
     (item) => item.status === "affordable"
   ).length;
@@ -117,6 +122,25 @@ export default function Home() {
       ? results.reduce((sum, item) => sum + item.rentToIncomePercentage, 0) /
         results.length
       : 0;
+
+  const filteredResults =
+    statusFilter === "all"
+      ? results
+      : results.filter((item) => item.status === statusFilter);
+
+  function handleSelectSuburb(suburbSlug: string) {
+    setSelectedSuburbSlug(suburbSlug);
+
+    const targetCard = cardRefs.current[suburbSlug];
+
+    if (targetCard) {
+      targetCard.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }
+
   async function handleSearch() {
     const income = Number(monthlyIncome);
 
@@ -142,6 +166,7 @@ export default function Home() {
       setResults(data.results);
       setSelectedSuburbSlug(null);
       setHoveredSuburbSlug(null);
+      setStatusFilter("all");
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong. Please try again.");
@@ -157,9 +182,11 @@ export default function Home() {
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
             Auckland Rent Analyzer
           </p>
+
           <h1 className="max-w-3xl text-4xl font-bold leading-tight md:text-5xl">
             Find Auckland suburbs that fit your income.
           </h1>
+
           <p className="mt-4 max-w-2xl text-base text-slate-600">
             Compare weekly rent with your monthly income and check which suburbs
             feel affordable, tight, or expensive.
@@ -169,6 +196,7 @@ export default function Home() {
         <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold">Your situation</h2>
+
             <p className="mt-2 text-sm text-slate-500">
               Start with your monthly income after tax.
             </p>
@@ -178,8 +206,10 @@ export default function Home() {
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Monthly income
                 </label>
+
                 <div className="flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-4">
                   <span className="text-slate-500">$</span>
+
                   <input
                     value={monthlyIncome}
                     onChange={(event) => setMonthlyIncome(event.target.value)}
@@ -196,6 +226,7 @@ export default function Home() {
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Housing type
                 </label>
+
                 <select
                   value={rentalType}
                   onChange={(event) =>
@@ -210,10 +241,12 @@ export default function Home() {
                   ))}
                 </select>
               </div>
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Workplace
                 </label>
+
                 <select
                   value={workplaceSlug}
                   onChange={(event) => setWorkplaceSlug(event.target.value)}
@@ -226,6 +259,7 @@ export default function Home() {
                   ))}
                 </select>
               </div>
+
               <button
                 onClick={handleSearch}
                 disabled={loading}
@@ -244,166 +278,151 @@ export default function Home() {
 
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-end justify-between gap-4">
-  <div>
-    <h2 className="text-xl font-semibold">Recommended suburbs</h2>
-    <p className="mt-2 text-sm text-slate-500">
-      Sorted by rent burden and distance to your selected workplace.
-    </p>
-  </div>
-  {results.length > 0 && (
-    <p className="text-sm text-slate-500">{results.length} suburbs</p>
-  )}
-</div>
+              <div>
+                <h2 className="text-xl font-semibold">Recommended suburbs</h2>
 
-{results.length > 0 && (
-  <div className="mb-6 grid gap-3 md:grid-cols-5">
-    <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-      <p className="text-xs font-medium text-green-700">Affordable</p>
-      <p className="mt-1 text-2xl font-bold text-green-800">
-        {affordableCount}
-      </p>
-    </div>
+                <p className="mt-2 text-sm text-slate-500">
+                  Sorted by rent burden and distance to your selected workplace.
+                </p>
+              </div>
 
-    <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
-      <p className="text-xs font-medium text-yellow-700">Tight</p>
-      <p className="mt-1 text-2xl font-bold text-yellow-800">
-        {moderateCount}
-      </p>
-    </div>
+              {results.length > 0 && (
+                <p className="text-sm text-slate-500">
+                  {filteredResults.length} of {results.length} suburbs
+                </p>
+              )}
+            </div>
 
-    <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-      <p className="text-xs font-medium text-red-700">Expensive</p>
-      <p className="mt-1 text-2xl font-bold text-red-800">
-        {expensiveCount}
-      </p>
-    </div>
+            {results.length > 0 && (
+              <div className="mb-6 grid gap-3 md:grid-cols-5">
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+                  <p className="text-xs font-medium text-green-700">
+                    Affordable
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-green-800">
+                    {affordableCount}
+                  </p>
+                </div>
 
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium text-slate-500">Cheapest</p>
-      <p className="mt-1 truncate text-lg font-bold text-slate-900">
-        {cheapestSuburb?.suburbName}
-      </p>
-    </div>
+                <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+                  <p className="text-xs font-medium text-yellow-700">Tight</p>
+                  <p className="mt-1 text-2xl font-bold text-yellow-800">
+                    {moderateCount}
+                  </p>
+                </div>
 
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-medium text-slate-500">Avg. ratio</p>
-      <p className="mt-1 text-2xl font-bold text-slate-900">
-        {averageRentRatio.toFixed(1)}%
-      </p>
-    </div>
-  </div>
-)}
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+                  <p className="text-xs font-medium text-red-700">Expensive</p>
+                  <p className="mt-1 text-2xl font-bold text-red-800">
+                    {expensiveCount}
+                  </p>
+                </div>
 
-<div className="mb-6">
-  {results.length === 0 ? (
-    <div className="flex h-[420px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
-      <div>
-        <p className="font-medium text-slate-700">Map preview</p>
-        <p className="mt-2 text-sm text-slate-500">
-          Search first to show suburb markers.
-        </p>
-      </div>
-    </div>
-  ) : (
-    <RentMap
-        results={results}
-        hoveredSuburbSlug={hoveredSuburbSlug}
-        selectedSuburbSlug={selectedSuburbSlug}
-        onSelectSuburb={handleSelectSuburb}
-    />
-  )}
-</div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-medium text-slate-500">
+                    Cheapest
+                  </p>
+                  <p className="mt-1 truncate text-lg font-bold text-slate-900">
+                    {cheapestSuburb?.suburbName}
+                  </p>
+                </div>
 
-{results.length === 0 ? (
-  <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
-    <div>
-      <p className="font-medium text-slate-700">No results yet.</p>
-      <p className="mt-2 text-sm text-slate-500">
-        Enter your income and click Find suburbs.
-      </p>
-    </div>
-  </div>
-) : (
-  <div className="grid gap-4 md:grid-cols-2">
-    {
-      results.map((item) => (
-      <article
-        key={`${item.suburbSlug}-${item.rentalType}`}
-        ref={(element) => {
-          cardRefs.current[item.suburbSlug] = element;
-        }}
-        onMouseEnter={() => setHoveredSuburbSlug(item.suburbSlug)}
-        onMouseLeave={() => setHoveredSuburbSlug(null)}
-        className={`rounded-3xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md ${
-          selectedSuburbSlug === item.suburbSlug
-            ? "border-slate-900 ring-4 ring-slate-900/10"
-            : "border-slate-200"
-        }`}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold">{item.suburbName}</h3>
-            <p className="mt-1 text-sm text-slate-500">{item.area}</p>
-          </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-medium text-slate-500">
+                    Avg. ratio
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900">
+                    {averageRentRatio.toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+            )}
 
-          <span
-            className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
-              item.status
-            )}`}
-          >
-            {getStatusLabel(item.status)}
-          </span>
-        </div>
+            {results.length > 0 && (
+              <div className="mb-6 flex flex-wrap gap-2">
+                {statusFilterOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setStatusFilter(option.value)}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                      statusFilter === option.value
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-white p-4">
-            <p className="text-xs text-slate-500">Weekly rent</p>
-            <p className="mt-1 text-lg font-bold">${item.weeklyRent}</p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-4">
-            <p className="text-xs text-slate-500">Monthly rent</p>
-            <p className="mt-1 text-lg font-bold">${item.monthlyRent}</p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-4">
-            <p className="text-xs text-slate-500">Income ratio</p>
-            <p className="mt-1 text-lg font-bold">
-              {item.rentToIncomePercentage}%
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-4">
-            <p className="text-xs text-slate-500">Listings</p>
-            <p className="mt-1 text-lg font-bold">{item.listingCount}</p>
-          </div>
-        </div>
-
-        <p className="mt-4 text-xs text-slate-400">
-          Source: {item.source} · Collected: {item.collectedAt}
-        </p>
-      </article>
-    ))}
-  </div>
-)}
+            <div className="mb-6">
+              {results.length === 0 ? (
+                <div className="flex h-[420px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
+                  <div>
+                    <p className="font-medium text-slate-700">Map preview</p>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Search first to show suburb markers.
+                    </p>
+                  </div>
+                </div>
+              ) : filteredResults.length === 0 ? (
+                <div className="flex h-[420px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
+                  <div>
+                    <p className="font-medium text-slate-700">
+                      No matching suburbs.
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Try another filter or adjust your income.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <RentMap
+                  results={filteredResults}
+                  hoveredSuburbSlug={hoveredSuburbSlug}
+                  selectedSuburbSlug={selectedSuburbSlug}
+                  onSelectSuburb={handleSelectSuburb}
+                />
+              )}
+            </div>
 
             {results.length === 0 ? (
-              <div className="flex min-h-[320px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
+              <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
                 <div>
-                  <p className="font-medium text-slate-700">
-                    No results yet.
-                  </p>
+                  <p className="font-medium text-slate-700">No results yet.</p>
                   <p className="mt-2 text-sm text-slate-500">
                     Enter your income and click Find suburbs.
                   </p>
                 </div>
               </div>
+            ) : filteredResults.length === 0 ? (
+              <div className="flex min-h-[220px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
+                <div>
+                  <p className="font-medium text-slate-700">
+                    No matching suburbs.
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Try another filter or adjust your income.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {results.map((item) => (
+                {filteredResults.map((item) => (
                   <article
                     key={`${item.suburbSlug}-${item.rentalType}`}
-                    className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+                    ref={(element) => {
+                      cardRefs.current[item.suburbSlug] = element;
+                    }}
+                    onMouseEnter={() => setHoveredSuburbSlug(item.suburbSlug)}
+                    onMouseLeave={() => setHoveredSuburbSlug(null)}
+                    className={`rounded-3xl border bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md ${
+                      selectedSuburbSlug === item.suburbSlug
+                        ? "border-slate-900 ring-4 ring-slate-900/10"
+                        : "border-slate-200"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -440,9 +459,7 @@ export default function Home() {
                       </div>
 
                       <div className="rounded-2xl bg-white p-4">
-                        <p className="text-xs text-slate-500">
-                          Income ratio
-                        </p>
+                        <p className="text-xs text-slate-500">Income ratio</p>
                         <p className="mt-1 text-lg font-bold">
                           {item.rentToIncomePercentage}%
                         </p>
@@ -451,14 +468,16 @@ export default function Home() {
                       <div className="rounded-2xl bg-white p-4">
                         <p className="text-xs text-slate-500">Distance</p>
                         <p className="mt-1 text-lg font-bold">
-                          {item.distanceToWorkKm} km
+                          {item.distanceToWorkKm !== null
+                            ? `${item.distanceToWorkKm} km`
+                            : "-"}
                         </p>
                       </div>
                     </div>
 
                     <p className="mt-4 text-xs text-slate-400">
-                      Source: {item.source} · {item.listingCount} listings · Collected:{" "}
-{item.collectedAt}
+                      Source: {item.source} · {item.listingCount} listings ·
+                      Collected: {item.collectedAt}
                     </p>
                   </article>
                 ))}
