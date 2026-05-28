@@ -11,6 +11,12 @@ type RentalType =
 
 type StatusFilter = "all" | "affordable" | "moderate" | "expensive";
 
+type SortOption =
+  | "best_match"
+  | "cheapest_rent"
+  | "closest_to_work"
+  | "lowest_income_ratio";
+
 type AffordabilityResult = {
   suburbName: string;
   suburbSlug: string;
@@ -67,6 +73,13 @@ const statusFilterOptions = [
   { label: "Expensive", value: "expensive" },
 ] as const;
 
+const sortOptions = [
+  { label: "Best match", value: "best_match" },
+  { label: "Cheapest rent", value: "cheapest_rent" },
+  { label: "Closest to work", value: "closest_to_work" },
+  { label: "Lowest income ratio", value: "lowest_income_ratio" },
+] as const;
+
 function getStatusLabel(status: AffordabilityResult["status"]) {
   if (status === "affordable") return "Affordable";
   if (status === "moderate") return "Tight";
@@ -90,7 +103,7 @@ export default function Home() {
   const [rentalType, setRentalType] = useState<RentalType>("flat_room");
   const [workplaceSlug, setWorkplaceSlug] = useState("auckland-cbd");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-
+  const [sortOption, setSortOption] = useState<SortOption>("best_match");
   const [results, setResults] = useState<AffordabilityResult[]>([]);
   const [hoveredSuburbSlug, setHoveredSuburbSlug] = useState<string | null>(
     null
@@ -127,6 +140,22 @@ export default function Home() {
     statusFilter === "all"
       ? results
       : results.filter((item) => item.status === statusFilter);
+
+  const sortedFilteredResults = [...filteredResults].sort((a, b) => {
+  if (sortOption === "cheapest_rent") {
+    return a.weeklyRent - b.weeklyRent;
+  }
+
+  if (sortOption === "closest_to_work") {
+    return (a.distanceToWorkKm ?? 999) - (b.distanceToWorkKm ?? 999);
+  }
+
+  if (sortOption === "lowest_income_ratio") {
+    return a.rentToIncomePercentage - b.rentToIncomePercentage;
+  }
+
+  return a.recommendationScore - b.recommendationScore;
+  });
 
   function handleSelectSuburb(suburbSlug: string) {
     setSelectedSuburbSlug(suburbSlug);
@@ -167,6 +196,7 @@ export default function Home() {
       setSelectedSuburbSlug(null);
       setHoveredSuburbSlug(null);
       setStatusFilter("all");
+      setSortOption("best_match");
     } catch (error) {
       console.error(error);
       setErrorMessage("Something went wrong. Please try again.");
@@ -356,6 +386,28 @@ export default function Home() {
                 ))}
               </div>
             )}
+            {results.length > 0 && (
+  <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <div>
+      <p className="text-sm font-semibold text-slate-800">Sort results</p>
+      <p className="mt-1 text-xs text-slate-500">
+        Change how suburb recommendations are ranked.
+      </p>
+    </div>
+
+    <select
+      value={sortOption}
+      onChange={(event) => setSortOption(event.target.value as SortOption)}
+      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+    >
+      {sortOptions.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
 
             <div className="mb-6">
               {results.length === 0 ? (
@@ -380,7 +432,7 @@ export default function Home() {
                 </div>
               ) : (
                 <RentMap
-                  results={filteredResults}
+                  results={sortedFilteredResults}
                   hoveredSuburbSlug={hoveredSuburbSlug}
                   selectedSuburbSlug={selectedSuburbSlug}
                   onSelectSuburb={handleSelectSuburb}
@@ -410,7 +462,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {filteredResults.map((item) => (
+                {sortedFilteredResults.map((item) => (
                   <article
                     key={`${item.suburbSlug}-${item.rentalType}`}
                     ref={(element) => {
