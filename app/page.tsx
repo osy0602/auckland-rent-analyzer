@@ -145,6 +145,7 @@ export default function Home() {
   if (sortOption === "cheapest_rent") {
     return a.weeklyRent - b.weeklyRent;
   }
+  
 
   if (sortOption === "closest_to_work") {
     return (a.distanceToWorkKm ?? 999) - (b.distanceToWorkKm ?? 999);
@@ -156,6 +157,26 @@ export default function Home() {
 
   return a.recommendationScore - b.recommendationScore;
   });
+
+  const bestMatch = results.length > 0
+  ? [...results].sort((a, b) => a.recommendationScore - b.recommendationScore)[0]
+  : null;
+
+  const cheapestRent = results.length > 0
+    ? [...results].sort((a, b) => a.weeklyRent - b.weeklyRent)[0]
+    : null;
+
+  const closestToWork = results.length > 0
+    ? [...results].sort(
+        (a, b) => (a.distanceToWorkKm ?? 999) - (b.distanceToWorkKm ?? 999)
+      )[0]
+    : null;
+
+  const mostAffordable = results.length > 0
+    ? [...results].sort(
+        (a, b) => a.rentToIncomePercentage - b.rentToIncomePercentage
+      )[0]
+    : null;
 
   function handleSelectSuburb(suburbSlug: string) {
     setSelectedSuburbSlug(suburbSlug);
@@ -363,6 +384,50 @@ export default function Home() {
                   </p>
                   <p className="mt-1 text-2xl font-bold text-slate-900">
                     {averageRentRatio.toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {results.length > 0 && (
+              <div className="mb-6 grid gap-3 md:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-medium text-slate-500">Best match</p>
+                  <p className="mt-1 truncate text-lg font-bold text-slate-900">
+                    {bestMatch?.suburbName}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Score {bestMatch?.recommendationScore}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-medium text-slate-500">Cheapest rent</p>
+                  <p className="mt-1 truncate text-lg font-bold text-slate-900">
+                    {cheapestRent?.suburbName}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    ${cheapestRent?.weeklyRent}/week
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-medium text-slate-500">Closest to work</p>
+                  <p className="mt-1 truncate text-lg font-bold text-slate-900">
+                    {closestToWork?.suburbName}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {closestToWork?.distanceToWorkKm} km
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-medium text-slate-500">Most affordable</p>
+                  <p className="mt-1 truncate text-lg font-bold text-slate-900">
+                    {mostAffordable?.suburbName}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {mostAffordable?.rentToIncomePercentage}% of income
                   </p>
                 </div>
               </div>
