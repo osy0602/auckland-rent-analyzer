@@ -324,6 +324,38 @@ export default function Home() {
                   {errorMessage}
                 </p>
               )}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-800">How ranking works</p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Suburbs are ranked using rent burden and distance to your selected
+                  workplace.
+                </p>
+
+                <div className="mt-3 rounded-xl bg-white p-3 text-xs text-slate-600">
+                  <p>
+                    <span className="font-semibold text-slate-800">Rent burden</span> =
+                    monthly rent ÷ monthly income
+                  </p>
+                  <p className="mt-1">
+                    <span className="font-semibold text-slate-800">Score</span> = rent
+                    burden percentage + distance × 1.2
+                  </p>
+                </div>
+
+                <p className="mt-3 text-xs text-slate-500">
+                  Lower score means a better match. Distance is based on straight-line
+                  distance, not actual public transport time.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-800">Data note</p>
+                <p className="mt-2 text-xs leading-5 text-amber-700">
+                  Current rent values are mock seed data for development. They will be
+                  replaced with manually verified or scraped market rent data in a future
+                  version.
+                </p>
+              </div>
             </div>
           </section>
 
