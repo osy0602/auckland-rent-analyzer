@@ -114,7 +114,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const affordableCount = results.filter(
     (item) => item.status === "affordable"
