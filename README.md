@@ -253,7 +253,7 @@ auckland-rent-analyzer/
 <br/>
 
 ## Deployment
-
+<a href = "https://auckland-rent-analyzer-xedi.vercel.app/">
 <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white"/>
 
 <br/>
@@ -371,7 +371,7 @@ create table rent_snapshots (
 
 # 🌐 Deployment
 
-<a href="YOUR_DEPLOYED_SITE_LINK">
+<a href = "https://auckland-rent-analyzer-xedi.vercel.app/">
 <img src="https://img.shields.io/badge/Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white"/>
 </a>
 
